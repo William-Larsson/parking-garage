@@ -1,5 +1,6 @@
 module Phus where
-    import Register () 
+    import Register (day0, day1, day2, day3,res_day0,res_day1,res_day2,res_day3)
+    import Data.List (findIndices)
 
     -- Main function of the system. 
     phus :: [(String, Bool, (Integer, Integer))] -> (String, [(String, (Integer, Integer))])
@@ -9,7 +10,6 @@ module Phus where
         in (findLongest spe, spe)
 
 
-    -- TODO: This works?!
     -- Calculate the time between a cars arrival and departure 
     -- [(regNr, arriving?, (hour, min))] -> [(regNr, (hour, min))]
     calcParkTime :: [(String, Bool, (Integer, Integer))] -> [(String, (Integer, Integer))]
@@ -29,8 +29,7 @@ module Phus where
     getDepartureTime str ((str2, b, (h, m)):xs) 
         | str == str2 && not b = (h, m)
         | otherwise            = getDepartureTime str xs   
-    --testData = [("test", False, (1,2)), ("cool", True, (3,4)), ("hej", False, (5,6)), ("nej", False, (7,8))]
-
+    
 
     -- Get the delta representing the duration that a car was parked. 
     -- (Hour, Min)::Arrival -> (Hour, Min)::Departure -> (dHour, dMin) 
@@ -43,32 +42,27 @@ module Phus where
             dh = if mTemp >= 0 then hTemp else hTemp - 1 
 
 
-
-
-
-
-
-    -- TODO: write doc. 
+    -- Finds all park entries for the same car and sums 
+    -- the times for all park instances in to a single entry. 
     sumParkEntries :: [(String, (Integer, Integer))] -> [(String, (Integer, Integer))]
-    sumParkEntries []     = []
-    sumParkEntries (x:xs) = []
-    -- TODO: 
-    -- 1. (x:xs)) -> "findIndices" matching string in x (returns [Int] with index of duplicates)
-    -- 2. For all in [Int] -> use combineTimes (in a folding?)
-    -- 3. Add combined tuple to list, concat with (4.)
-    -- 4. Recursive call to begin at (1) for xs. 
+    sumParkEntries []         = []
+    sumParkEntries all@(x:_) = (fst x, sum) : sumParkEntries newList
+        where
+            i       = findIndices (\y -> fst x == fst y) all 
+            times   = getTimes i all 
+            sum     = foldr combineTimes (head times) (tail times) 
+            newList = removeElements (reverse i) all
 
 
+    -- Get times from from list based on list of indices. 
+    getTimes :: [Int] -> [(String, (Integer, Integer))] -> [(Integer, Integer)]
+    getTimes [] _ = []
+    getTimes _ [] = []
+    getTimes (i:is) xs = snd (xs !! i) : getTimes is xs
 
 
-
-
-
-
-
-    -- TODO: Done, combine with other functions!
     -- Takes two times as (Hour, Minute) and combines them
-    combineTimes :: Integral a => (a, a) -> (a, a) -> (a, a)
+    combineTimes :: (Integer, Integer) -> (Integer, Integer) -> (Integer, Integer)
     combineTimes (h1, m1) (h2, m2) = (h, m)
         where
             mTemp = m1 + m2
@@ -77,7 +71,20 @@ module Phus where
             h = if mTemp < 60 then hTemp else hTemp + 1
 
 
-    -- TODO: Done, combine with other functions!
+    -- Removes elements at indices from list xs. 
+    -- [Int] indices needs to be in descending order
+    removeElements :: [Int] -> [(String, (Integer, Integer))] -> [(String, (Integer, Integer))]
+    removeElements is xs = foldl (flip removeAt) xs is
+
+
+    -- Removes element from list at given index.
+    removeAt :: Int -> [(String, (Integer, Integer))] -> [(String, (Integer, Integer))]
+    removeAt n []  = []
+    removeAt n (x:xs) 
+        | n == 0    = removeAt (n-1) xs
+        | otherwise = x : removeAt (n-1) xs
+
+
     -- Finds the longest parked car and returns its 
     -- registration number.
     findLongest :: [(String, (Integer, Integer))] -> String
@@ -88,4 +95,3 @@ module Phus where
         | fst (snd x) < fst (snd y) = findLongest (y:xs)
         | snd (snd x) > snd (snd y) = findLongest (x:xs)
         | otherwise                 = findLongest (y:xs)
-    -- testData = [("nope", (1,2)), ("win", (10,10)), ("lose", (10, 9)), ("sike", (11, 55))]Time
