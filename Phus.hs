@@ -1,5 +1,5 @@
 module Phus where
-    import Register (day0, day1, day2, day3,res_day0,res_day1,res_day2,res_day3)
+    import Register (day0, day1, day2, day3)
     import Data.List (findIndices)
 
     -- Main function of the system. 
@@ -88,7 +88,7 @@ module Phus where
     -- Finds the longest parked car and returns its 
     -- registration number.
     findLongest :: [(String, (Integer, Integer))] -> String
-    findLongest []  = error "Empty list"
+    findLongest []  = []
     findLongest [x] = fst x 
     findLongest (x:y:xs) 
         | fst (snd x) > fst (snd y) = findLongest (x:xs)
